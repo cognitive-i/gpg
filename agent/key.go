@@ -50,7 +50,7 @@ type Key struct {
 }
 
 // Public returns this key's public key.
-func (key Key) Public() crypto.PublicKey {
+func (key *Key) Public() crypto.PublicKey {
 	return key.publicKey
 }
 
@@ -59,7 +59,7 @@ func (key Key) Public() crypto.PublicKey {
 // opts must have type *OAEPOptions and OAEP decryption is done.
 //
 // This function is basically a copy of rsa.Decrypt().
-func (key Key) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) (plaintext []byte, err error) {
+func (key *Key) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) (plaintext []byte, err error) {
 	switch pub := key.publicKey.(type) {
 	case *rsa.PublicKey:
 		priv := &internalrsa.PrivateKey{
@@ -106,7 +106,7 @@ func (key Key) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterO
 // will be used.
 //
 // This function is basically a copy of rsa.Sign().
-func (key Key) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (signature []byte, err error) {
+func (key *Key) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (signature []byte, err error) {
 	switch pub := key.publicKey.(type) {
 	case *rsa.PublicKey:
 		priv := &internalrsa.PrivateKey{
@@ -141,7 +141,7 @@ func (key Key) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (signatu
 	}
 }
 
-func (key Key) decrypt(c *big.Int) (*big.Int, error) {
+func (key *Key) decrypt(c *big.Int) (*big.Int, error) {
 	encCipherText, err := encodeRSACipherText(c.Bytes())
 	if err != nil {
 		return nil, err
@@ -190,7 +190,7 @@ func (key Key) decrypt(c *big.Int) (*big.Int, error) {
 	return (&big.Int{}).SetBytes(plaintext), nil
 }
 
-func (key Key) signPKCS1v15(msg []byte, opts crypto.SignerOpts) ([]byte, error) {
+func (key *Key) signPKCS1v15(msg []byte, opts crypto.SignerOpts) ([]byte, error) {
 	var hashType string
 	switch opts.HashFunc() {
 	case crypto.MD5:
