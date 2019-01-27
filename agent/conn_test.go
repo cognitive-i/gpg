@@ -15,7 +15,7 @@ func init() {
 	}
 
 	var err error
-	if conn, err = Dial("../testdata/gnupg/S.gpg-agent", options); err != nil {
+	if conn, err = Dial("", options); err != nil {
 		panic(err.Error())
 	}
 }

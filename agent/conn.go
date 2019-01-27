@@ -3,9 +3,12 @@ package agent
 import (
 	"bufio"
 	"crypto"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os/exec"
+	"regexp"
 
 	"strings"
 	"sync"
@@ -28,7 +31,17 @@ type Conn struct {
 
 // Dial connects to the specified unix domain socket and checks if there is a
 // live GPG agent on the other end.
+// If filename is "", try to find the path the socket automatically
+// by calling gpgconf --list-dirs (see findAgentSocket).
 func Dial(filename string, options []string) (*Conn, error) {
+	if filename == "" {
+		var err error
+		filename, err = findAgentSocket()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	c, err := net.Dial("unix", filename)
 	if err != nil {
 		return nil, err
@@ -46,6 +59,24 @@ func Dial(filename string, options []string) (*Conn, error) {
 	}
 
 	return conn, nil
+}
+
+// Find the agent socket by calling the gpgconf program and parse its output
+func findAgentSocket() (string, error) {
+	re := regexp.MustCompile("agent-socket:(.*)\n")
+
+	out, err := exec.Command("gpgconf", "--list-dirs").Output()
+	if err != nil {
+		return "", err
+	}
+
+	filename := re.FindStringSubmatch(string(out))
+
+	if filename == nil {
+		return "", errors.New("agent-socket path not found in gpgconf output")
+	}
+
+	return filename[1], nil
 }
 
 // request sends a request to the pgp-agent and then returns its response.
