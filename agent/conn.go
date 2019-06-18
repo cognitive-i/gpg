@@ -115,13 +115,8 @@ func (conn *Conn) Close() error {
 }
 
 func keyScan(key *Key, line string) error {
-	unfilteredParts := strings.Split(line, " ")
-	parts := []string{}
-	for _, p := range unfilteredParts {
-		if p != "" {
-			parts = append(parts, p)
-		}
-	}
+	// trim extra whitespace from line
+	parts := strings.Fields(strings.TrimSpace(line))
 
 	if len(parts) != 10 {
 		return fmt.Errorf("illegal format for KEYINFO line")
