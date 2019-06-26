@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/prep/gpg"
+	"github.com/LouisBrunner/gpg"
 )
 
 var conn *Conn

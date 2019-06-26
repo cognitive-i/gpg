@@ -10,7 +10,7 @@ import (
 	"io"
 	"math/big"
 
-	internalrsa "github.com/prep/gpg/agent/internal/rsa"
+	internalrsa "github.com/LouisBrunner/gpg/agent/internal/rsa"
 )
 
 // KeyType describes the type of the key.
@@ -93,11 +93,11 @@ func (key *Key) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.Decrypter
 			return internalrsa.DecryptPKCS1v15(rand, priv, ciphertext)
 
 		default:
-			return nil, errors.New("github.com/prep/gpg/agent: invalid options for Decrypt")
+			return nil, errors.New("github.com/LouisBrunner/gpg/agent: invalid options for Decrypt")
 		}
 
 	default:
-		return nil, errors.New("github.com/prep/gpg/agent: unknown public key")
+		return nil, errors.New("github.com/LouisBrunner/gpg/agent: unknown public key")
 	}
 }
 
@@ -129,7 +129,7 @@ func (key *Key) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (signat
 			// It seems sometimes the signature can have leading zero bytes such that its over the keysize
 			leadingZeros := bytes.Repeat([]byte{00}, diff)
 			if !bytes.HasPrefix(sig, leadingZeros) {
-				return nil, errors.New("github.com/prep/gpg/agent: signature length too large with nonzero leading bytes")
+				return nil, errors.New("github.com/LouisBrunner/gpg/agent: signature length too large with nonzero leading bytes")
 			}
 			// We trim the leading zeros
 			sig = bytes.TrimPrefix(sig, leadingZeros)
@@ -137,7 +137,7 @@ func (key *Key) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (signat
 
 		return sig, nil
 	default:
-		return nil, errors.New("github.com/prep/gpg/agent: unknown public key")
+		return nil, errors.New("github.com/LouisBrunner/gpg/agent: unknown public key")
 	}
 }
 

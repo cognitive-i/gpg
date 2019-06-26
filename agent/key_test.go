@@ -12,7 +12,7 @@ import (
 	_ "crypto/sha1"
 	"crypto/sha256"
 
-	"github.com/prep/gpg"
+	"github.com/LouisBrunner/gpg"
 )
 
 func TestPublic(t *testing.T) {
