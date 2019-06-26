@@ -41,13 +41,13 @@ func decodePlainText(data []byte) ([]byte, error) {
 	return value, nil
 }
 
-// (public-key(rsa(n%n)(e%e)))
+// (public-key(rsa(n%n)(e%e))(comment))
 func decodeRSAPublicKey(data string) (crypto.PublicKey, error) {
 	exp, err := sexp.Unmarshal([]byte(data))
 	if err != nil {
 		return nil, err
 	}
-	if len(exp) != 2 {
+	if len(exp) < 2 {
 		return nil, ErrUnknownFormat
 	}
 
