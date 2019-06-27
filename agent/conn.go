@@ -199,6 +199,13 @@ func keyScan(key *Key, line string) error {
 
 // Key returns the key information for the key with the specified keygrip.
 func (conn *Conn) Key(keygrip string) (Key, error) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	return conn.key(keygrip)
+}
+
+func (conn *Conn) key(keygrip string) (Key, error) {
 	var key Key
 	respFunc := func(respType, data string) (err error) {
 		if respType != "S" || !strings.HasPrefix(data, "KEYINFO ") {
@@ -207,9 +214,6 @@ func (conn *Conn) Key(keygrip string) (Key, error) {
 
 		return keyScan(&key, data)
 	}
-
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
 
 	err := conn.Raw(respFunc, "KEYINFO --ssh-fpr %s", keygrip)
 	if err != nil {

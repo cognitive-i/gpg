@@ -1,7 +1,6 @@
 gpg-agent
-[![TravisCI](https://travis-ci.org/prep/gpg.svg?branch=master)](https://travis-ci.org/prep/gpg.svg?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/prep/gpg)](https://goreportcard.com/report/github.com/prep/gpg)
-[![GoDoc](https://godoc.org/github.com/prep/gpg/agent?status.svg)](https://godoc.org/github.com/prep/gpg/agent)
+[![Go Report Card](https://goreportcard.com/badge/github.com/LouisBrunner/gpg)](https://goreportcard.com/report/github.com/LouisBrunner/gpg)
+[![GoDoc](https://godoc.org/github.com/LouisBrunner/gpg/agent?status.svg)](https://godoc.org/github.com/LouisBrunner/gpg/agent)
 =========
 This is an experimental repository of a client to the GPG agent. It was built out of a desire to have a somewhat friendly interface to GPG keys stored on a smart card by way of GPG.
 
