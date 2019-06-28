@@ -101,6 +101,10 @@ func (key *Key) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.Decrypter
 	}
 }
 
+func pubSize(pub *rsa.PublicKey) int {
+	return (pub.N.BitLen() + 7) / 8
+}
+
 // Sign signs msg with this key, possibly using entropy from rand. If opts is
 // a *PSSOptions then the PSS algorithm will be used, otherwise PKCS#1 v1.5
 // will be used.
@@ -125,7 +129,7 @@ func (key *Key) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (signat
 			return nil, err
 		}
 
-		if diff := len(sig) - pub.Size(); diff > 0 {
+		if diff := len(sig) - pubSize(pub); diff > 0 {
 			// It seems sometimes the signature can have leading zero bytes such that its over the keysize
 			leadingZeros := bytes.Repeat([]byte{00}, diff)
 			if !bytes.HasPrefix(sig, leadingZeros) {
