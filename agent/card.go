@@ -12,9 +12,7 @@ import (
 type CardKey struct {
 	Key
 
-	Created     time.Time
-	Fingerprint string
-	grip        string
+	Created time.Time
 }
 
 // CardSex describes the sex specified on the card.
@@ -50,7 +48,13 @@ type Card struct {
 	conn *Conn
 }
 
-const cardMaxKeyNumber = 3
+// The IDs of the different subkeys
+const (
+	SignatureKey = iota
+	EncryptionKey
+	AuthenticationKey
+	cardMaxKeyNumber
+)
 
 var errIllegalFormat = "illegal format for %s line"
 
@@ -78,7 +82,10 @@ func (conn *Conn) CurrentCard() (*Card, error) {
 	}
 
 	for _, key := range card.Subkeys {
-		key.Key, err = card.conn.key(key.grip)
+		if key == nil {
+			continue
+		}
+		key.Key, err = card.conn.key(key.Keygrip)
 		if err != nil {
 			return nil, err
 		}
@@ -89,17 +96,17 @@ func (conn *Conn) CurrentCard() (*Card, error) {
 
 // SignatureKey returns the card signature key (or nil if it's missing)
 func (card *Card) SignatureKey() *CardKey {
-	return card.Subkeys[0]
+	return card.Subkeys[SignatureKey]
 }
 
 // EncryptionKey returns the card encryption key (or nil if it's missing)
 func (card *Card) EncryptionKey() *CardKey {
-	return card.Subkeys[1]
+	return card.Subkeys[EncryptionKey]
 }
 
 // AuthenticationKey returns the card authentication key (or nil if it's missing)
 func (card *Card) AuthenticationKey() *CardKey {
-	return card.Subkeys[2]
+	return card.Subkeys[AuthenticationKey]
 }
 
 func cardEnsureKey(card *Card, n int) (*CardKey, error) {
@@ -247,7 +254,10 @@ func cardScan(card *Card, line string) error {
 		if err != nil {
 			return err
 		}
-		key.grip = parts[1]
+		key.Keygrip = parts[1]
+	case "PROGRESS":
+	default:
+		return fmt.Errorf("unknown property %s in %s", parts[0], line)
 	}
 
 	return nil

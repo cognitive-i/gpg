@@ -21,3 +21,9 @@ TODO
 License
 -------
 This software is distributed under the BSD-style license found in the LICENSE file.
+
+
+References
+----------
+
+https://g10code.com/docs/scdaemon-ffg2007.pdf
