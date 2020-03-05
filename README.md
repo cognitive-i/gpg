@@ -1,10 +1,12 @@
 gpg-agent
-[![Go Report Card](https://goreportcard.com/badge/github.com/LouisBrunner/gpg)](https://goreportcard.com/report/github.com/LouisBrunner/gpg)
-[![GoDoc](https://godoc.org/github.com/LouisBrunner/gpg/agent?status.svg)](https://godoc.org/github.com/LouisBrunner/gpg/agent)
+[![Go Report Card](https://goreportcard.com/badge/github.com/automata-tech/gpg)](https://goreportcard.com/report/github.com/automata-tech/gpg)
+[![GoDoc](https://godoc.org/github.com/automata-tech/gpg/agent?status.svg)](https://godoc.org/github.com/automata-tech/gpg/agent)
 =========
 This is an experimental repository of a client to the GPG agent. It was built out of a desire to have a somewhat friendly interface to GPG keys stored on a smart card by way of GPG.
 
 At this point, the interface might be subject to change.
+
+This fork adds support for the currently connected card.
 
 Things to know
 --------------
@@ -17,11 +19,11 @@ There are a couple things *off* about this Go package, namely:
 TODO
 ----
 * There are possibly some unnecessary type conversions happening because `bufio.ReadString()` is used as opposed to `bufio.ReadBytes()`.
+* Move travis.yml to GitHub Action
 
 License
 -------
 This software is distributed under the BSD-style license found in the LICENSE file.
-
 
 References
 ----------

@@ -1,4 +1,4 @@
-module github.com/LouisBrunner/gpg
+module github.com/automata-tech/gpg
 
 go 1.13
 
