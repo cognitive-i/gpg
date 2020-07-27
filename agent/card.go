@@ -70,7 +70,7 @@ func (conn *Conn) CurrentCard() (*Card, error) {
 			return nil
 		}
 
-		return cardScan(&card, data)
+		return CardScan(&card, data)
 	}
 
 	conn.mu.Lock()
@@ -122,7 +122,7 @@ func cardEnsureKey(card *Card, n int) (*CardKey, error) {
 	return key, nil
 }
 
-func cardScan(card *Card, line string) error {
+func CardScan(card *Card, line string) error {
 	parts := strings.Fields(strings.TrimSpace(line))
 	switch parts[0] {
 	case "SIG-COUNTER":

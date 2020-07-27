@@ -152,7 +152,7 @@ func (card *Card) AddKey(subKey int) error {
 			case "KEY-FPR":
 				key.Fingerprint = parts[1]
 			default:
-				return cardScan(card, data)
+				return CardScan(card, data)
 			}
 			return nil
 		}
@@ -171,7 +171,7 @@ func (card *Card) AddKey(subKey int) error {
 			return nil
 		}
 
-		return cardScan(card, data)
+		return CardScan(card, data)
 	}, "LEARN --sendinfo --ssh-fpr")
 	if err != nil {
 		return err
