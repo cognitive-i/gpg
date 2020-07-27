@@ -20,9 +20,10 @@ type CardSex int
 
 // These constants define the possible CardSex values.
 const (
-	CardSexUnspecified CardSex = 0
-	CardSexMale                = 1
-	CardSexFemale              = 2
+	CardSexUnspecified   CardSex = 0
+	CardSexMale                  = 1
+	CardSexFemale                = 2
+	CardSexNotApplicable         = 9
 )
 
 // Card describes the information gpg-agent exposes about a card
@@ -207,6 +208,8 @@ func CardScan(card *Card, line string) error {
 			card.DisplaySex = CardSexMale
 		case "2":
 			card.DisplaySex = CardSexFemale
+		case "9":
+			card.DisplaySex = CardSexNotApplicable
 		}
 	case "DISP-NAME":
 		if len(parts) != 2 {

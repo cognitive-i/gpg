@@ -45,10 +45,11 @@ func TestCard_CardscanSex(t *testing.T) {
 	Expect(err).To(BeNil())
 	Expect(card.DisplaySex).To(BeEquivalentTo(CardSexFemale))
 
-	// https://gnupg.org/ftp/specs/OpenPGP-smart-card-application-3.4.1.pdf
-	// 4.4.3.5 Sex:
-	//   9 => Not Applicable
 	card, err = commonTestParse(t, "DISP-SEX 9")
+	Expect(err).To(BeNil())
+	Expect(card.DisplaySex).To(BeEquivalentTo(CardSexNotApplicable))
+
+	card, err = commonTestParse(t, "DISP-SEX 7")
 	Expect(err).To(BeNil())
 	Expect(card.DisplaySex).To(BeEquivalentTo(CardSexUnspecified))
 }
