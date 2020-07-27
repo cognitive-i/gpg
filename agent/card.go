@@ -258,6 +258,7 @@ func CardScan(card *Card, line string) error {
 			return err
 		}
 		key.Keygrip = parts[1]
+	case "KDF":
 	case "PROGRESS":
 	default:
 		return fmt.Errorf("unknown property %s in %s", parts[0], line)

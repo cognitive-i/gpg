@@ -72,10 +72,15 @@ func TestCard_CardscanExtCaps(t *testing.T) {
 	Expect(card.ExtCap).To(Equal("gc=1+ki=1+fc=1+pd=1+mcl3=2560+aac=1+sm=0+si=0+dec=1+bt=0+kdf=0"))
 }
 
-func TestCard_CardscanUnsupportedField(t *testing.T) {
+func TestCard_CardscanIgnoresKDF(t *testing.T) {
 	// OpenPGP Smart Card V3.3 supports
 	// https://gnupg.org/ftp/specs/OpenPGP-smart-card-application-3.4.1.pdf
 	// 4.3.2 Key derived format
 	_, err := commonTestParse(t, "KDF �%01%00")
+	Expect(err).To(BeNil())
+}
+
+func TestCard_CardscanUnsupportedField(t *testing.T) {
+	_, err := commonTestParse(t, "GIBBERISH 12345")
 	Expect(err).ToNot(BeNil())
 }
