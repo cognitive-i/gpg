@@ -14,8 +14,12 @@ func init() {
 		"agent-awareness=2.1.0",
 	}
 
-	var err error
-	if conn, err = Dial("", options); err != nil {
+	socketFilename, err := StartGpgAgent()
+	if err == nil {
+		conn, err = Dial(socketFilename, options)
+	}
+
+	if err != nil {
 		panic(err.Error())
 	}
 }
