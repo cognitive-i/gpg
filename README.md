@@ -6,7 +6,11 @@ This is an experimental repository of a client to the GPG agent. It was built ou
 
 At this point, the interface might be subject to change.
 
-This fork adds support for the currently connected card.
+This fork (automata-tech) adds support for the currently connected card.
+
+This fork (Cognitive-i) does the following:
+* support for OpenPGP smart cards based on spec 3.4.1
+* support [trezor-agent](https://github.com/romanz/trezor-agent) that connects to Ledger and Trezor devices 
 
 Things to know
 --------------
