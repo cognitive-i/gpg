@@ -1,6 +1,6 @@
 gpg-agent
-[![Go Report Card](https://goreportcard.com/badge/github.com/automata-tech/gpg)](https://goreportcard.com/report/github.com/automata-tech/gpg)
-[![GoDoc](https://godoc.org/github.com/automata-tech/gpg/agent?status.svg)](https://godoc.org/github.com/automata-tech/gpg/agent)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cognitive-i/gpg)](https://goreportcard.com/badge/github.com/cognitive-i/gpg)
+[![GoDoc](https://godoc.org/github.com/cognitive-i/gpg/agent?status.svg)](https://godoc.org/github.com/cognitive-i/gpg/agent)
 =========
 This is an experimental repository of a client to the GPG agent. It was built out of a desire to have a somewhat friendly interface to GPG keys stored on a smart card by way of GPG.
 

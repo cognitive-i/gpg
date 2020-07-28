@@ -12,7 +12,7 @@ import (
 	_ "crypto/sha1"
 	"crypto/sha256"
 
-	"github.com/automata-tech/gpg"
+	"github.com/cognitive-i/gpg"
 )
 
 func TestPublic(t *testing.T) {
