@@ -73,7 +73,7 @@ func (conn *Conn) CurrentCard() (*Card, error) {
 			return nil
 		}
 
-		return CardScan(&card, data)
+		return cardScan(&card, data)
 	}
 
 	conn.mu.Lock()
@@ -125,7 +125,7 @@ func cardEnsureKey(card *Card, n int) (*CardKey, error) {
 	return key, nil
 }
 
-func CardScan(card *Card, line string) error {
+func cardScan(card *Card, line string) error {
 	parts := strings.Fields(strings.TrimSpace(line))
 	switch parts[0] {
 	case "SIG-COUNTER":
@@ -264,7 +264,7 @@ func CardScan(card *Card, line string) error {
 		card.KeyDerivedFormat = true
 		data := []byte(line)
 
-		last := len(data) -1
+		last := len(data) - 1
 		fmt.Print("[")
 		for i, b := range data {
 			fmt.Printf("0x%02x", b)
@@ -273,8 +273,6 @@ func CardScan(card *Card, line string) error {
 			}
 		}
 		fmt.Println("]")
-
-
 
 	case "PROGRESS":
 	default:

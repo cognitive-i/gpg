@@ -11,7 +11,7 @@ import (
 func commonTestParse(t *testing.T, data string) (card *Card, err error) {
 	RegisterTestingT(t)
 	card = &Card{}
-	err = CardScan(card, data)
+	err = cardScan(card, data)
 	return
 }
 
