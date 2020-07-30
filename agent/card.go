@@ -46,6 +46,8 @@ type Card struct {
 
 	Subkeys [cardMaxKeyNumber]*CardKey
 
+	KeyDerivedFormat bool
+
 	conn *Conn
 }
 
@@ -259,6 +261,21 @@ func CardScan(card *Card, line string) error {
 		}
 		key.Keygrip = parts[1]
 	case "KDF":
+		card.KeyDerivedFormat = true
+		data := []byte(line)
+
+		last := len(data) -1
+		fmt.Print("[")
+		for i, b := range data {
+			fmt.Printf("0x%02x", b)
+			if i != last {
+				fmt.Print(", ")
+			}
+		}
+		fmt.Println("]")
+
+
+
 	case "PROGRESS":
 	default:
 		return fmt.Errorf("unknown property %s in %s", parts[0], line)
