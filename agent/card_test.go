@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"bytes"
 	"fmt"
 	. "github.com/onsi/gomega"
 	"strconv"
@@ -74,21 +75,45 @@ func TestCard_CardscanExtCaps(t *testing.T) {
 	Expect(card.ExtCap).To(Equal("gc=1+ki=1+fc=1+pd=1+mcl3=2560+aac=1+sm=0+si=0+dec=1+bt=0+kdf=0"))
 }
 
+func parseTags(data []byte) map[byte][]byte {
+	result := map[byte][]byte{}
 
-func parseTags(data []byte) {
 	for p := 0; p < len(data); {
 		record := data[p:]
 		tag := record[0]
-		length, _ := strconv.Atoi(string(record[2:4]))
-		value := string(record[4:4 + (length * 3)])
+		length := int(record[1])
+		value := record[2 : 2+length]
 		fmt.Printf("0x%02x %d %v\n", tag, length, value)
-		p = (length * 2) + 5 + p
+		p += length + 2
+
+		result[tag] = value
+		fmt.Println(tag, value)
 	}
+
+	return result
 }
 
-
 // implement plus percent unescape
+func unescapePercent(source []byte, treatPlusAsSpace bool) []byte {
+	if treatPlusAsSpace {
+		source = bytes.ReplaceAll(source, []byte{'+'}, []byte{' '})
+	}
 
+	var result []byte = nil
+	for i := 0; i < len(source); {
+		if source[i] != '%' {
+			result = append(result, source[i])
+		} else {
+			v, _ := strconv.Atoi(string(source[i+1 : i+3]))
+			result = append(result, byte(v))
+			i += 2
+		}
+
+		i++
+	}
+
+	return result
+}
 
 func TestCard_CardscanIgnoresKdfFactoryReset(t *testing.T) {
 	// OpenPGP Smart Card V3.3 supports
@@ -100,8 +125,8 @@ func TestCard_CardscanIgnoresKdfFactoryReset(t *testing.T) {
 		0x4b, 0x44, 0x46, 0x20, // "KDF "
 		0x81, 0x25, 0x30, 0x31, 0x25, 0x30, 0x30,
 	}
-
-	parseTags(data[4:])
+	c := unescapePercent(data, true)
+	parseTags(c[4:])
 
 	card, err := commonTestParse(t, string(data))
 
@@ -116,7 +141,7 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 
 	// from a ZeitControl cardsystems GmbH: OpenPGP smart card
 	data := []byte{
-		0x4b, 0x44, 0x46, 0x20,  // "KDF "
+		0x4b, 0x44, 0x46, 0x20, // "KDF "
 		0x81, 0x25, 0x30, 0x31, 0x25, 0x30, 0x33, // KDF algorithm byte
 		0x82, 0x25, 0x30, 0x31, 0x25, 0x30, 0x38, // hash algorithm byte
 		0x83, 0x25, 0x30, 0x34, 0x25, 0x30, 0x32, 0x2b, 0x25, 0x30, 0x30, 0x25, 0x30, 0x30, // iteration count
@@ -127,7 +152,8 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 		0x88, 0x2b, 0xce, 0x79, 0xfb, 0x44, 0x25, 0x30, 0x41, 0x25, 0x31, 0x31, 0xea, 0xbc, 0xb3, 0x3d, 0x3c, 0x25, 0x30, 0x35, 0x59, 0xc9, 0xde, 0x41, 0x63, 0x25, 0x30, 0x41, 0xbf, 0x2f, 0x85, 0x3f, 0x25, 0x30, 0x41, 0x32, 0x79, 0xe1, 0xac, 0x7d, 0x54, 0xc7, 0x2b, 0x34,
 	}
 
-	//parseTags(data[4:])
+	c := unescapePercent(data, true)
+	parseTags(c[4:])
 
 	card, err := commonTestParse(t, string(data))
 
