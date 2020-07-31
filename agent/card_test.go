@@ -134,7 +134,7 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 	c := decodeWithPlus(data)
 	parseTags(c[4:])
 
-	card, err := commonTestParse(t, string(data))
+	card, err := commonTestParse(t, data)
 
 	Expect(err).To(BeNil())
 	Expect(card.KeyDerivedFormat).To(BeTrue())

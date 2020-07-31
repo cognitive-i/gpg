@@ -4,9 +4,14 @@ package agent
 
 import (
 	. "github.com/onsi/gomega"
+	"io"
 	"log"
 	"testing"
 )
+
+func noErrorClose(closer io.Closer) {
+	_ = closer.Close()
+}
 
 func commonConn(t *testing.T) *Conn {
 	RegisterTestingT(t)
@@ -32,7 +37,7 @@ func TestConn_CurrentCard(t *testing.T) {
 
 	card, err := conn.CurrentCard()
 	Expect(err).To(BeNil(), "have you connected a smart card?")
-	defer conn.Close()
+	defer noErrorClose(conn)
 
 	Expect(card.Reader).ToNot(BeEmpty())
 	Expect(card.Serial).ToNot(BeEmpty())
@@ -46,7 +51,7 @@ func TestConn_IfHasKdf(t *testing.T) {
 	conn := commonConn(t)
 	card, err := conn.CurrentCard()
 	Expect(err).To(BeNil(), "have you connected a smart card?")
-	defer conn.Close()
+	defer noErrorClose(conn)
 
 	// https://en.wikipedia.org/wiki/OpenPGP_card
 	// Vendor IDs
