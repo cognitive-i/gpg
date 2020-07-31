@@ -74,4 +74,3 @@ func TestConn_IfHasKdf(t *testing.T) {
 	Expect(card.MaxPINLength[1]).To(BeNumerically(">=", 64))
 	Expect(card.MaxPINLength[2]).To(BeNumerically(">=", 64))
 }
-

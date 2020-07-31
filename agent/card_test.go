@@ -2,9 +2,7 @@ package agent
 
 import (
 	"bytes"
-	"fmt"
 	. "github.com/onsi/gomega"
-	"strconv"
 	"testing"
 )
 
@@ -75,41 +73,22 @@ func TestCard_CardscanExtCaps(t *testing.T) {
 	Expect(card.ExtCap).To(Equal("gc=1+ki=1+fc=1+pd=1+mcl3=2560+aac=1+sm=0+si=0+dec=1+bt=0+kdf=0"))
 }
 
-func parseTags(data []byte) map[byte][]byte {
+func parseTags(data string) map[byte][]byte {
+	s := bytes.NewBufferString(data)
 	result := map[byte][]byte{}
 
-	for p := 0; p < len(data); {
-		record := data[p:]
-		tag := record[0]
-		length := int(record[1])
-		value := record[2 : 2+length]
-		fmt.Printf("0x%02x %d %v\n", tag, length, value)
-		p += length + 2
-
-		result[tag] = value
-		fmt.Println(tag, value)
-	}
-
-	return result
-}
-
-// implement plus percent unescape
-func unescapePercent(source []byte, treatPlusAsSpace bool) []byte {
-	if treatPlusAsSpace {
-		source = bytes.ReplaceAll(source, []byte{'+'}, []byte{' '})
-	}
-
-	var result []byte = nil
-	for i := 0; i < len(source); {
-		if source[i] != '%' {
-			result = append(result, source[i])
-		} else {
-			v, _ := strconv.Atoi(string(source[i+1 : i+3]))
-			result = append(result, byte(v))
-			i += 2
+	for {
+		if tag, err := s.ReadByte(); err == nil {
+			if length, err := s.ReadByte(); err == nil {
+				value := make([]byte, length)
+				if n, _ := s.Read(value); n == int(length) {
+					result[tag] = value
+					continue
+				}
+			}
 		}
 
-		i++
+		break
 	}
 
 	return result
@@ -121,14 +100,14 @@ func TestCard_CardscanIgnoresKdfFactoryReset(t *testing.T) {
 	// 4.3.2 Key derived format
 
 	// from a ZeitControl cardsystems GmbH: OpenPGP smart card
-	data := []byte{
+	data := string([]byte{
 		0x4b, 0x44, 0x46, 0x20, // "KDF "
 		0x81, 0x25, 0x30, 0x31, 0x25, 0x30, 0x30,
-	}
-	c := unescapePercent(data, true)
+	})
+	c := decodeWithPlus(data)
 	parseTags(c[4:])
 
-	card, err := commonTestParse(t, string(data))
+	card, err := commonTestParse(t, data)
 
 	Expect(err).To(BeNil())
 	Expect(card.KeyDerivedFormat).To(BeTrue())
@@ -140,7 +119,7 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 	// 4.3.2 Key derived format
 
 	// from a ZeitControl cardsystems GmbH: OpenPGP smart card
-	data := []byte{
+	data := string([]byte{
 		0x4b, 0x44, 0x46, 0x20, // "KDF "
 		0x81, 0x25, 0x30, 0x31, 0x25, 0x30, 0x33, // KDF algorithm byte
 		0x82, 0x25, 0x30, 0x31, 0x25, 0x30, 0x38, // hash algorithm byte
@@ -150,9 +129,9 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 		0x86, 0x25, 0x30, 0x38, 0x51, 0x36, 0x4d, 0x9b, 0x5e, 0x48, 0x74, 0x25, 0x30, 0x41, // salt for admin PW3
 		0x87, 0x2b, 0x3b, 0x9f, 0xd1, 0xe0, 0xb5, 0xb9, 0x89, 0x2d, 0x78, 0xd8, 0x25, 0x31, 0x33, 0x25, 0x30, 0x39, 0x37, 0xed, 0x7f, 0xa6, 0x32, 0xa3, 0xae, 0x83, 0x79, 0xb6, 0xb9, 0x25, 0x31, 0x42, 0x79, 0x5a, 0x74, 0x33, 0x55, 0xa7, 0x51, 0xfe,
 		0x88, 0x2b, 0xce, 0x79, 0xfb, 0x44, 0x25, 0x30, 0x41, 0x25, 0x31, 0x31, 0xea, 0xbc, 0xb3, 0x3d, 0x3c, 0x25, 0x30, 0x35, 0x59, 0xc9, 0xde, 0x41, 0x63, 0x25, 0x30, 0x41, 0xbf, 0x2f, 0x85, 0x3f, 0x25, 0x30, 0x41, 0x32, 0x79, 0xe1, 0xac, 0x7d, 0x54, 0xc7, 0x2b, 0x34,
-	}
+	})
 
-	c := unescapePercent(data, true)
+	c := decodeWithPlus(data)
 	parseTags(c[4:])
 
 	card, err := commonTestParse(t, string(data))
