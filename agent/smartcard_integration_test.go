@@ -5,7 +5,6 @@ package agent
 import (
 	. "github.com/onsi/gomega"
 	"log"
-	"strings"
 	"testing"
 )
 
@@ -38,16 +37,6 @@ func TestConn_CurrentCard(t *testing.T) {
 	Expect(card.Reader).ToNot(BeEmpty())
 	Expect(card.Serial).ToNot(BeEmpty())
 	Expect(card.AppType).To(Equal("OPENPGP"))
-}
-func parseCaps(extCaps string) map[string]string {
-	result := map[string]string{}
-	for _, capTuple := range strings.Split(extCaps, "+") {
-		pair := strings.Split(capTuple, "=")
-		ExpectWithOffset(1, pair).To(HaveLen(2))
-		result[pair[0]] = pair[1]
-	}
-
-	return result
 }
 
 func TestConn_IfHasKdf(t *testing.T) {

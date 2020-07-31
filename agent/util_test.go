@@ -58,3 +58,25 @@ func TestUtil_EncodeDataEscapes(t *testing.T) {
 	output := "[+%2B+1+]"
 	Expect(encodeWithPlus(input)).To(Equal(output))
 }
+
+func TestUtil_ParseCaps(t *testing.T) {
+	RegisterTestingT(t)
+
+	caps := parseCaps("gc=1+ki=1+fc=1+pd=1+mcl3=2560+aac=1+sm=0+si=0+dec=1+bt=0+kdf=0")
+	Expect(caps).To(HaveKeyWithValue("fc", "1"))
+	Expect(caps).To(HaveKeyWithValue("mcl3", "2560"))
+	Expect(caps).To(HaveKeyWithValue("kdf", "0"))
+
+	caps = parseCaps("")
+	Expect(caps).To(HaveLen(0))
+
+	caps = parseCaps("gc=1=3=4=")
+	Expect(caps).To(HaveKeyWithValue("gc", "1"))
+
+	caps = parseCaps("gc=")
+	Expect(caps).To(HaveKeyWithValue("gc", ""))
+
+	caps = parseCaps("gc+pd=5")
+	Expect(caps).To(HaveLen(1))
+	Expect(caps).To(HaveKeyWithValue("pd", "5"))
+}

@@ -43,3 +43,14 @@ func decodeWithPlus(source string) string {
 func encodeWithPlus(source string) string {
 	return encoderPlus.Replace(encode(source))
 }
+
+func parseCaps(extCaps string) map[string]string {
+	result := map[string]string{}
+	for _, capTuple := range strings.Split(extCaps, "+") {
+		if pair := strings.Split(capTuple, "="); len(pair) >= 2 {
+			result[pair[0]] = pair[1]
+		}
+	}
+
+	return result
+}
