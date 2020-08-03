@@ -2,7 +2,10 @@ package agent
 
 import (
 	"bytes"
+	"fmt"
 	. "github.com/onsi/gomega"
+	"golang.org/x/crypto/openpgp/s2k"
+	"io"
 	"testing"
 )
 
@@ -95,6 +98,8 @@ func parseTags(data string) map[byte][]byte {
 }
 
 func TestCard_CardscanIgnoresKdfFactoryReset(t *testing.T) {
+	RegisterTestingT(t)
+
 	// OpenPGP Smart Card V3.3 supports
 	// https://gnupg.org/ftp/specs/OpenPGP-smart-card-application-3.4.1.pdf
 	// 4.3.2 Key derived format
@@ -114,6 +119,8 @@ func TestCard_CardscanIgnoresKdfFactoryReset(t *testing.T) {
 }
 
 func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
+	RegisterTestingT(t)
+
 	// OpenPGP Smart Card V3.3 supports
 	// https://gnupg.org/ftp/specs/OpenPGP-smart-card-application-3.4.1.pdf
 	// 4.3.2 Key derived format
@@ -132,7 +139,52 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 	})
 
 	c := decodeWithPlus(data)
-	parseTags(c[4:])
+	tags := parseTags(c[4:])
+
+	for t, v := range tags {
+		d := "unknown"
+		switch t {
+		case 0x81:
+			switch v[0] {
+			case 0:
+				d = "NONE"
+			case 3:
+				d = "KDF_ITERSALTED_S2K"
+			}
+			fmt.Println("KDF", d)
+
+		case 0x82:
+			n, ok := s2k.HashIdToString(v[0])
+			fmt.Println(n, ok)
+
+		case 0x83:
+			fmt.Println("iteration", v)
+
+		case 0x84:
+			fmt.Println("salt pw1")
+		case 0x85:
+			fmt.Println("reset salt pw1")
+		case 0x86:
+			fmt.Println("admin salt pw3")
+
+		case 0x87:
+			fmt.Println("initial hash pw1")
+
+		case 0x88:
+			fmt.Println("initial hash pw3")
+
+		}
+	}
+
+	s2kBuffer := io.MultiReader(
+		bytes.NewBuffer(tags[0x81]),
+		bytes.NewBuffer(tags[0x82]),
+		bytes.NewBuffer(tags[0x83]),
+		bytes.NewBuffer(tags[0x84]),
+	)
+
+	_, err := s2k.Parse(s2kBuffer) // almost works, expects salt to be present, but iterated count seems wrong
+	Expect(err).To(BeNil())
 
 	card, err := commonTestParse(t, data)
 
@@ -140,7 +192,12 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 	Expect(card.KeyDerivedFormat).To(BeTrue())
 }
 
-const bla = `
+const _ = `
+#define S2K_DECODE_COUNT(_val) ((16ul + ((_val) & 15)) << (((_val) >> 4) + 6))
+
+
+
+S2K_DECODE_COUNT 
 * Generate KDF data.  */
 static gpg_error_t
 gen_kdf_data (unsigned char *data, int single_salt)
