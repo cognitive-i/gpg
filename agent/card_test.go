@@ -138,8 +138,64 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 		0x88, 0x2b, 0xce, 0x79, 0xfb, 0x44, 0x25, 0x30, 0x41, 0x25, 0x31, 0x31, 0xea, 0xbc, 0xb3, 0x3d, 0x3c, 0x25, 0x30, 0x35, 0x59, 0xc9, 0xde, 0x41, 0x63, 0x25, 0x30, 0x41, 0xbf, 0x2f, 0x85, 0x3f, 0x25, 0x30, 0x41, 0x32, 0x79, 0xe1, 0xac, 0x7d, 0x54, 0xc7, 0x2b, 0x34,
 	})
 
+	card, err := commonTestParse(t, data)
+
+	Expect(err).To(BeNil())
+	Expect(card.KeyDerivedFormat).To(BeTrue())
+}
+
+// golang.org/x/crypto/openpgp/s2k/s2k.go:70
+
+// encodeCount converts an iterative "count" in the range 1024 to
+// 65011712, inclusive, to an encoded count. The return value is the
+// octet that is actually stored in the GPG file. encodeCount panics
+// if i is not in the above range (encodedCount above takes care to
+// pass i in the correct range). See RFC 4880 Section 3.7.7.1.
+func encodeCount(i int) uint8 {
+	if i < 1024 || i > 65011712 {
+		panic("count arg i outside the required range")
+	}
+
+	for encoded := 0; encoded < 256; encoded++ {
+		count := decodeCount(uint8(encoded))
+		if count >= i {
+			return uint8(encoded)
+		}
+	}
+
+	return 255
+}
+
+// decodeCount returns the s2k mode 3 iterative "count" corresponding to
+// the encoded octet c.
+func decodeCount(c uint8) int {
+	return (16 + int(c&15)) << (uint32(c>>4) + 6)
+}
+
+func TestCard_CardscanParseKdfTags(t *testing.T) {
+	RegisterTestingT(t)
+
+	// OpenPGP Smart Card V3.3 supports
+	// https://gnupg.org/ftp/specs/OpenPGP-smart-card-application-3.4.1.pdf
+	// 4.3.2 Key derived format
+
+	// from a ZeitControl cardsystems GmbH: OpenPGP smart card
+	data := string([]byte{
+		0x4b, 0x44, 0x46, 0x20, // "KDF "
+		0x81, 0x25, 0x30, 0x31, 0x25, 0x30, 0x33, // KDF algorithm byte
+		0x82, 0x25, 0x30, 0x31, 0x25, 0x30, 0x38, // hash algorithm byte
+		0x83, 0x25, 0x30, 0x34, 0x25, 0x30, 0x32, 0x2b, 0x25, 0x30, 0x30, 0x25, 0x30, 0x30, // iteration count
+		0x84, 0x25, 0x30, 0x38, 0xb4, 0xc4, 0xa0, 0xb4, 0x28, 0xe0, 0xd2, 0x46, // salt for PW1
+		0x85, 0x25, 0x30, 0x38, 0x33, 0x4b, 0x73, 0x32, 0xce, 0x2b, 0xf9, 0x25, 0x31, 0x36, // salt for resetting PW1
+		0x86, 0x25, 0x30, 0x38, 0x51, 0x36, 0x4d, 0x9b, 0x5e, 0x48, 0x74, 0x25, 0x30, 0x41, // salt for admin PW3
+		0x87, 0x2b, 0x3b, 0x9f, 0xd1, 0xe0, 0xb5, 0xb9, 0x89, 0x2d, 0x78, 0xd8, 0x25, 0x31, 0x33, 0x25, 0x30, 0x39, 0x37, 0xed, 0x7f, 0xa6, 0x32, 0xa3, 0xae, 0x83, 0x79, 0xb6, 0xb9, 0x25, 0x31, 0x42, 0x79, 0x5a, 0x74, 0x33, 0x55, 0xa7, 0x51, 0xfe,
+		0x88, 0x2b, 0xce, 0x79, 0xfb, 0x44, 0x25, 0x30, 0x41, 0x25, 0x31, 0x31, 0xea, 0xbc, 0xb3, 0x3d, 0x3c, 0x25, 0x30, 0x35, 0x59, 0xc9, 0xde, 0x41, 0x63, 0x25, 0x30, 0x41, 0xbf, 0x2f, 0x85, 0x3f, 0x25, 0x30, 0x41, 0x32, 0x79, 0xe1, 0xac, 0x7d, 0x54, 0xc7, 0x2b, 0x34,
+	})
+
 	c := decodeWithPlus(data)
 	tags := parseTags(c[4:])
+
+	var pw1Len, pw3Len, iteration = 0, 0, 0
 
 	for t, v := range tags {
 		d := "unknown"
@@ -155,10 +211,14 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 
 		case 0x82:
 			n, ok := s2k.HashIdToString(v[0])
-			fmt.Println(n, ok)
+			fmt.Println("hash", n, ok)
 
 		case 0x83:
 			fmt.Println("iteration", v)
+			Expect(v).To(HaveLen(4))
+			for _, b := range v {
+				iteration = (iteration << 8) | int(b)
+			}
 
 		case 0x84:
 			fmt.Println("salt pw1")
@@ -169,27 +229,49 @@ func TestCard_CardscanIgnoresKdfConfigured(t *testing.T) {
 
 		case 0x87:
 			fmt.Println("initial hash pw1")
+			pw1Len = len(v)
 
 		case 0x88:
 			fmt.Println("initial hash pw3")
-
+			pw3Len = len(v)
 		}
 	}
 
+	Expect(pw1Len).ToNot(Equal(0))
+	Expect(pw3Len).ToNot(Equal(0))
+	Expect(iteration).ToNot(Equal(0))
+
+	iterationCount := encodeCount(iteration)
+
 	s2kBuffer := io.MultiReader(
-		bytes.NewBuffer(tags[0x81]),
-		bytes.NewBuffer(tags[0x82]),
-		bytes.NewBuffer(tags[0x83]),
-		bytes.NewBuffer(tags[0x84]),
+		bytes.NewBuffer(tags[0x81]), // golang.org/x/crypto/openpgp/s2k/s2k.go:173
+		bytes.NewBuffer(tags[0x82]), // golang.org/x/crypto/openpgp/s2k/s2k.go:164
+		bytes.NewBuffer(tags[0x84]), // golang.org/x/crypto/openpgp/s2k/s2k.go:189
+		bytes.NewBuffer([]byte{iterationCount}),
 	)
 
-	_, err := s2k.Parse(s2kBuffer) // almost works, expects salt to be present, but iterated count seems wrong
+	pwHasher, err := s2k.Parse(s2kBuffer) // almost works, expects salt to be present, but iterated count seems wrong
 	Expect(err).To(BeNil())
 
-	card, err := commonTestParse(t, data)
+	pw1Hash := make([]byte, pw1Len, pw1Len)
+	pwHasher(pw1Hash, []byte("123456"))
 
+	Expect(pw1Hash).To(Equal(tags[0x87]))
+
+	s2kBuffer = io.MultiReader(
+		bytes.NewBuffer(tags[0x81]), // golang.org/x/crypto/openpgp/s2k/s2k.go:173
+		bytes.NewBuffer(tags[0x82]), // golang.org/x/crypto/openpgp/s2k/s2k.go:164
+		bytes.NewBuffer(tags[0x86]), // golang.org/x/crypto/openpgp/s2k/s2k.go:189
+		bytes.NewBuffer([]byte{iterationCount}),
+	)
+
+	pwHasher, err = s2k.Parse(s2kBuffer) // almost works, expects salt to be present, but iterated count seems wrong
 	Expect(err).To(BeNil())
-	Expect(card.KeyDerivedFormat).To(BeTrue())
+
+	pw3Hash := make([]byte, pw3Len, pw3Len)
+	pwHasher(pw3Hash, []byte("12345678"))
+
+	Expect(pw3Hash).To(Equal(tags[0x88]))
 }
 
 const _ = `
