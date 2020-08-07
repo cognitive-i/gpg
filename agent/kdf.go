@@ -15,6 +15,16 @@ type Kdf struct {
 	HashPassword func(password string) []byte
 }
 
+// tag constants of interest to Key Derived Function
+const (
+	KdfAlgorithm   byte = 0x81
+	HashAlgorithm       = 0x82
+	IterationCount      = 0x83
+	SaltPw1             = 0x84
+	SaltPw1Reset        = 0x85
+	SaltPw3             = 0x86
+)
+
 func NewKdf(algorithm, hashAlgorithm, salt []byte, iterationCount byte) *Kdf {
 	if (len(algorithm) != 1) || (len(hashAlgorithm) != 1) || (len(salt) == 0) {
 		return nil
@@ -43,23 +53,24 @@ func NewKdf(algorithm, hashAlgorithm, salt []byte, iterationCount byte) *Kdf {
 }
 
 func NewKdfCollection(tags map[byte][]byte) KdfCollection {
-	var result KdfCollection
-	if iteration, ok := tags[0x83]; ok && len(iteration) == 4 {
+	if iteration, ok := tags[IterationCount]; ok && len(iteration) == 4 {
 		iterationCount := encodeCountFromByte(iteration)
 
-		algorithm := tags[0x81]
-		hash := tags[0x82]
+		algorithm := tags[KdfAlgorithm]
+		hash := tags[HashAlgorithm]
 
-		saltPw1 := tags[0x84]
-		saltResetPw1 := tags[0x85]
-		saltPw3 := tags[0x86]
+		saltPw1 := tags[SaltPw1]
+		saltResetPw1 := tags[SaltPw1Reset]
+		saltPw3 := tags[SaltPw3]
 
-		result.Pw1 = NewKdf(algorithm, hash, saltPw1, iterationCount)
-		result.Pw1Reset = NewKdf(algorithm, hash, saltResetPw1, iterationCount)
-		result.Pw3 = NewKdf(algorithm, hash, saltPw3, iterationCount)
+		return KdfCollection{
+			Pw1:      NewKdf(algorithm, hash, saltPw1, iterationCount),
+			Pw1Reset: NewKdf(algorithm, hash, saltResetPw1, iterationCount),
+			Pw3:      NewKdf(algorithm, hash, saltPw3, iterationCount),
+		}
 	}
 
-	return result
+	return KdfCollection{}
 }
 
 func encodeCountFromByte(iterationCount []byte) uint8 {
