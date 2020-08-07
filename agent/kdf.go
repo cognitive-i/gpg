@@ -31,15 +31,15 @@ func NewKdf(algorithm, hashAlgorithm, salt []byte, iterationCount byte) *Kdf {
 	}
 
 	var buffer []byte = nil
-	buffer = append(buffer, algorithm...)
-	buffer = append(buffer, hashAlgorithm...)
+	buffer = append(buffer, algorithm[0])
+	buffer = append(buffer, hashAlgorithm[0])
 	buffer = append(buffer, salt...)
 	buffer = append(buffer, iterationCount)
 
 	if hash, ok := s2k.HashIdToHash(hashAlgorithm[0]); ok {
 		digestLength := hash.Size()
 
-		if pwHasher, err := s2k.Parse(bytes.NewBuffer(buffer)); err == nil {
+		if pwHasher, err := s2k.Parse(bytes.NewReader(buffer)); err == nil {
 			return &Kdf{
 				HashPassword: func(password string) []byte {
 					result := make([]byte, digestLength, digestLength)
