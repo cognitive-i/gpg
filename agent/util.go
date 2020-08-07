@@ -54,3 +54,24 @@ func parseCaps(extCaps string) map[string]string {
 
 	return result
 }
+
+func parseTags(data string, skipBytes int) map[byte][]byte {
+	s := bytes.NewBufferString(data[skipBytes:])
+	result := map[byte][]byte{}
+
+	for {
+		if tag, err := s.ReadByte(); err == nil {
+			if length, err := s.ReadByte(); err == nil {
+				value := make([]byte, length)
+				if n, _ := s.Read(value); n == int(length) {
+					result[tag] = value
+					continue
+				}
+			}
+		}
+
+		break
+	}
+
+	return result
+}

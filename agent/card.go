@@ -46,7 +46,7 @@ type Card struct {
 
 	Subkeys [cardMaxKeyNumber]*CardKey
 
-	KeyDerivedFormat bool
+	KeyDerivedFormat KdfCollection
 
 	conn *Conn
 }
@@ -261,18 +261,8 @@ func cardScan(card *Card, line string) error {
 		}
 		key.Keygrip = parts[1]
 	case "KDF":
-		card.KeyDerivedFormat = true
-		data := []byte(line)
-
-		last := len(data) - 1
-		fmt.Print("[")
-		for i, b := range data {
-			fmt.Printf("0x%02x", b)
-			if i != last {
-				fmt.Print(", ")
-			}
-		}
-		fmt.Println("]")
+		tags := parseTags(decodeWithPlus(line), 4)
+		card.KeyDerivedFormat = NewKdfCollection(tags)
 
 	case "PROGRESS":
 	default:
